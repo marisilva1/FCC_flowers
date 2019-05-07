@@ -145,7 +145,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
     tf.logging.error("Image directory '" + image_dir + "' not found.")
     return None
   result = collections.OrderedDict()
-  sub_dirs = sorted(x[0] for x in tf.gfile.Walk(image_dir))
+  sub_dirs = sorted(x[0] for x in tf.io.gfile.Walk(image_dir))
   # The root directory comes first, so skip it.
   is_root_dir = True
   for sub_dir in sub_dirs:
@@ -165,7 +165,7 @@ def create_image_lists(image_dir, testing_percentage, validation_percentage):
     tf.logging.info("Looking for images in '" + dir_name + "'")
     for extension in extensions:
       file_glob = os.path.join(image_dir, dir_name, '*.' + extension)
-      file_list.extend(tf.gfile.Glob(file_glob))
+      file_list.extend(tf.gfile.io.glob(file_glob))
     if not file_list:
       tf.logging.warning('No files found')
       continue
@@ -279,7 +279,7 @@ def create_module_graph(module_spec):
   """
   height, width = hub.get_expected_image_size(module_spec)
   with tf.Graph().as_default() as graph:
-    resized_input_tensor = tf.placeholder(tf.float32, [None, height, width, 3])
+    resized_input_tensor = tf.compat.v1.placeholder(tf.float32, [None, height, width, 3])
     m = hub.Module(module_spec)
     bottleneck_tensor = m(resized_input_tensor)
     wants_quantization = any(node.op in FAKE_QUANT_OPS
@@ -658,13 +658,13 @@ def variable_summaries(var):
   """Attach a lot of summaries to a Tensor (for TensorBoard visualization)."""
   with tf.name_scope('summaries'):
     mean = tf.reduce_mean(var)
-    tf.summary.scalar('mean', mean)
+    tf.compat.v1.summary.scalar('mean', mean)
     with tf.name_scope('stddev'):
       stddev = tf.sqrt(tf.reduce_mean(tf.square(var - mean)))
     tf.summary.scalar('stddev', stddev)
     tf.summary.scalar('max', tf.reduce_max(var))
     tf.summary.scalar('min', tf.reduce_min(var))
-    tf.summary.histogram('histogram', var)
+    tf.compat.v1.summary.histogram('histogram', var)
 
 
 def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
@@ -691,7 +691,7 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
   batch_size, bottleneck_tensor_size = bottleneck_tensor.get_shape().as_list()
   assert batch_size is None, 'We want to work with arbitrary batch size.'
   with tf.name_scope('input'):
-    bottleneck_input = tf.placeholder_with_default(
+    bottleneck_input = tf.compat.v1.placeholder_with_default(
         bottleneck_tensor,
         shape=[batch_size, bottleneck_tensor_size],
         name='BottleneckInputPlaceholder')
@@ -703,7 +703,7 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
   layer_name = 'final_retrain_ops'
   with tf.name_scope(layer_name):
     with tf.name_scope('weights'):
-      initial_value = tf.truncated_normal(
+      initial_value = tf.random.truncated_normal(
           [bottleneck_tensor_size, class_count], stddev=0.001)
       layer_weights = tf.Variable(initial_value, name='final_weights')
       variable_summaries(layer_weights)
@@ -735,13 +735,13 @@ def add_final_retrain_ops(class_count, final_tensor_name, bottleneck_tensor,
     return None, None, bottleneck_input, ground_truth_input, final_tensor
 
   with tf.name_scope('cross_entropy'):
-    cross_entropy_mean = tf.losses.sparse_softmax_cross_entropy(
+    cross_entropy_mean = tf.compat.v1.losses.sparse_softmax_cross_entropy(
         labels=ground_truth_input, logits=logits)
 
   tf.summary.scalar('cross_entropy', cross_entropy_mean)
 
   with tf.name_scope('train'):
-    optimizer = tf.train.GradientDescentOptimizer(FLAGS.learning_rate)
+    optimizer = tf.compat.v1.train.GradientDescentOptimizer(FLAGS.learning_rate)
     train_step = optimizer.minimize(cross_entropy_mean)
 
   return (train_step, cross_entropy_mean, bottleneck_input, ground_truth_input,
@@ -845,7 +845,7 @@ def save_graph_to_file(graph_file_name, module_spec, class_count):
   sess, _, _, _, _, _ = build_eval_session(module_spec, class_count)
   graph = sess.graph
 
-  output_graph_def = tf.graph_util.convert_variables_to_constants(
+  output_graph_def = tf.compat.v1.graph_util.convert_variables_to_constants(
       sess, graph.as_graph_def(), [FLAGS.final_tensor_name])
 
   with tf.gfile.GFile(graph_file_name, 'wb') as f:
@@ -854,9 +854,9 @@ def save_graph_to_file(graph_file_name, module_spec, class_count):
 
 def prepare_file_system():
   # Set up the directory we'll write summaries to for TensorBoard
-  if tf.gfile.Exists(FLAGS.summaries_dir):
-    tf.gfile.DeleteRecursively(FLAGS.summaries_dir)
-  tf.gfile.MakeDirs(FLAGS.summaries_dir)
+  if tf.io.gfile.exists(FLAGS.summaries_dir):
+    tf.io.gfile.rmtree(FLAGS.summaries_dir)
+  tf.io.gfile.makedirs(FLAGS.summaries_dir)
   if FLAGS.intermediate_store_frequency > 0:
     ensure_dir_exists(FLAGS.intermediate_output_graphs_dir)
   return
@@ -880,7 +880,7 @@ def add_jpeg_decoding(module_spec):
   decoded_image_4d = tf.expand_dims(decoded_image_as_float, 0)
   resize_shape = tf.stack([input_height, input_width])
   resize_shape_as_int = tf.cast(resize_shape, dtype=tf.int32)
-  resized_image = tf.image.resize_bilinear(decoded_image_4d,
+  resized_image = tf.compat.v1.image.resize_bilinear(decoded_image_4d,
                                            resize_shape_as_int)
   return jpeg_data, resized_image
 
@@ -911,11 +911,11 @@ def logging_level_verbosity(logging_verbosity):
     'WARN', 'ERROR', 'FATAL'
   """
   name_to_level = {
-    'FATAL': tf.logging.FATAL,
-    'ERROR': tf.logging.ERROR,
-    'WARN': tf.logging.WARN,
-    'INFO': tf.logging.INFO,
-    'DEBUG': tf.logging.DEBUG
+    'FATAL': tf.compat.v1.logging.FATAL,
+    'ERROR': tf.compat.v1.logging.ERROR,
+    'WARN': tf.compat.v1.logging.WARN,
+    'INFO': tf.compat.v1.logging.INFO,
+    'DEBUG': tf.compat.v1.logging.DEBUG
   }
 
   try:
@@ -968,10 +968,10 @@ def main(_):
          class_count, FLAGS.final_tensor_name, bottleneck_tensor,
          wants_quantization, is_training=True)
 
-  with tf.Session(graph=graph) as sess:
+  with tf.compat.v1.Session(graph=graph) as sess:
     # Initialize all weights: for the module to their pretrained values,
     # and for the newly added retraining layer to random initial values.
-    init = tf.global_variables_initializer()
+    init = tf.compat.v1.global_variables_initializer()
     sess.run(init)
 
     # Set up the image decoding sub-graph.
@@ -995,8 +995,8 @@ def main(_):
     evaluation_step, _ = add_evaluation_step(final_tensor, ground_truth_input)
 
     # Merge all the summaries and write them out to the summaries_dir
-    merged = tf.summary.merge_all()
-    train_writer = tf.summary.FileWriter(FLAGS.summaries_dir + '/train',
+    merged = tf.compat.v1.summary.merge_all()
+    train_writer = tf.compat.v1.summary.FileWriter(FLAGS.summaries_dir + '/train',
                                          sess.graph)
 
     validation_writer = tf.summary.FileWriter(
@@ -1004,7 +1004,7 @@ def main(_):
 
     # Create a train saver that is used to restore values into an eval graph
     # when exporting models.
-    train_saver = tf.train.Saver()
+    train_saver = tf.compat.v1.train.Saver()
 
     # Run the training for as many cycles as requested on the command line.
     for i in range(FLAGS.how_many_training_steps):
@@ -1278,5 +1278,4 @@ if __name__ == '__main__':
       choices=['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'],
       help='How much logging output should be produced.')
   FLAGS, unparsed = parser.parse_known_args()
-  tf.app.run(main=main, argv=[sys.argv[0]] + unparsed)
-
+  tf.compat.v1.app.run(main=main, argv=[sys.argv[0]] + unparsed)
