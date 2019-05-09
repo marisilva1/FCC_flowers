@@ -22,6 +22,7 @@ You may need to install/upgrade
 
 # tf_files includes the images that I have used.
 *I believe if you just download the script CNN_DaisyORWeed.py and run, you will be able to see how far I have gotten. I have also included the .ipynb file, if you have jupyter installed.*
+Feel free to use the one image, C_tinctoria_fake_daisy.jpg, as a test image if you wish (this would work better if my code actually worked).
 
 Feel free to peruse the 'valiant effort,' and I apologize for not being able to be proactive enough to work around like-avoidable issues with Setup (unless my 12-inch MacBook is truly not cut out for this stuff, though I doubt that's the issue).
 
