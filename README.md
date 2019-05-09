@@ -20,9 +20,10 @@ You may need to install/upgrade
 2. Keras
 3. image (pillow)
 
-# I believe if you just download the script CNN_DaisyVsWeed.py and run, you will be able to see how far I have gotten. I have also included the .ipynb file, if you have jupyter installed.
+*I believe if you just download the script CNN_DaisyVsWeed.py and run, you will be able to see how far I have gotten. I have also included the .ipynb file, if you have jupyter installed.*
+
 Feel free to peruse the 'valiant effort,' and I apologize for not being able to be proactive enough to work around like-avoidable issues with Setup (unless my 12-inch MacBook is truly not cut out for this stuff, though I doubt that's the issue).
 
 Thanks for a great semester; I must stress despite my progress on this project that I have learned a lot about python, and expect for this to be a great advantage for me when it comes to doing environmental research in the future!
 
-- Mariana Silva
+-- Mariana Silva
