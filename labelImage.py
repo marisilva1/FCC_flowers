@@ -15,7 +15,7 @@ image_data = tf.io.gfile.GFile(image_path, 'rb').read()
 
 # Loads label file, strips off carriage return
 label_lines = [line.rstrip() for line
-                   in tf.io.gfile.GFile("./flower_labels.txt")]
+                   in tf.io.gfile.GFile("/Users/marisilva/Documents/GitHub/FCC_flowers/flower_labels.txt")]
 
 # Unpersists graph from file
 with tf.compat.v1.gfile.GFile("tf_files/retrained_graph.pb", 'rb') as f:
