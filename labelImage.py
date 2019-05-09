@@ -18,7 +18,7 @@ label_lines = [line.rstrip() for line
                    in tf.io.gfile.GFile("/Users/marisilva/Documents/GitHub/FCC_flowers/flower_labels.txt")]
 
 # Unpersists graph from file
-with tf.compat.v1.gfile.GFile("tf_files/retrained_graph.pb", 'rb') as f:
+with tf.compat.v1.gfile.GFile("/Users/marisilva/Documents/GitHub/FCC_flowers/retrained_graph.pb", 'rb') as f:
     graph_def = tf.compat.v1.GraphDef()
     graph_def.ParseFromString(f.read())
     _ = tf.import_graph_def(graph_def, name='')
